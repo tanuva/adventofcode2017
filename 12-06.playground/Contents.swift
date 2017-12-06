@@ -45,8 +45,7 @@ func findFullestBank(_ state: [Int]) -> Int {
     return fullest
 }
 
-func redistribute(blockIndex: Int, state constState: [Int]) -> [Int] {
-    var state = constState
+func redistribute(blockIndex: Int, state: inout [Int]) {
     var blockCount = state[blockIndex]
     state[blockIndex] = 0
     
@@ -56,8 +55,6 @@ func redistribute(blockIndex: Int, state constState: [Int]) -> [Int] {
         blockCount -= 1
         i = (i + 1) % state.count
     }
-    
-    return state
 }
 
 var inputs = ["0 2 7 0",
@@ -71,7 +68,7 @@ func solve1(_ input: String) -> Int {
     while !known(state: state, seenStates: seenStates) {
         seenStates.append(state)
         let fullestBankIndex = findFullestBank(state)
-        state = redistribute(blockIndex: fullestBankIndex, state: state)
+        redistribute(blockIndex: fullestBankIndex, state: &state)
         redistributions += 1
     }
     
@@ -90,7 +87,7 @@ func solve2(_ input: String) -> Int {
         while !known(state: state, seenStates: seenStates) {
             seenStates.append(state)
             let fullestBankIndex = findFullestBank(state)
-            state = redistribute(blockIndex: fullestBankIndex, state: state)
+            redistribute(blockIndex: fullestBankIndex, state: &state)
             redistributions += 1
         }
     }
