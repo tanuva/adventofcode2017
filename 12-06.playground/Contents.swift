@@ -12,7 +12,7 @@ func convert(_ s: String) -> [Int] {
     return out
 }
 
-func equal(a: [Int], b: [Int]) -> Bool {
+func areEqual(a: [Int], b: [Int]) -> Bool {
     for i in 0..<a.count {
         if a[i] != b[i] {
             return false
@@ -22,9 +22,9 @@ func equal(a: [Int], b: [Int]) -> Bool {
     return true
 }
 
-func known(state: [Int], seenStates: [[Int]]) -> Bool {
+func isKnown(state: [Int], seenStates: [[Int]]) -> Bool {
     for seenState in seenStates {
-        if equal(a: state, b: seenState) {
+        if areEqual(a: state, b: seenState) {
             return true
         }
     }
@@ -65,7 +65,7 @@ func solve1(_ input: String) -> Int {
     var state = convert(input)
     var redistributions = 0
     
-    while !known(state: state, seenStates: seenStates) {
+    while !isKnown(state: state, seenStates: seenStates) {
         seenStates.append(state)
         let fullestBankIndex = findFullestBank(state)
         redistribute(blockIndex: fullestBankIndex, state: &state)
@@ -84,7 +84,7 @@ func solve2(_ input: String) -> Int {
         redistributions = 0
         seenStates = []
         
-        while !known(state: state, seenStates: seenStates) {
+        while !isKnown(state: state, seenStates: seenStates) {
             seenStates.append(state)
             let fullestBankIndex = findFullestBank(state)
             redistribute(blockIndex: fullestBankIndex, state: &state)
