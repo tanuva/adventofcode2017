@@ -12,8 +12,7 @@ func convert(_ input: String) -> [Int] {
     return offsets
 }
 
-func solve(_ offsetsConst: [Int], _ newOffset: (Int) -> (Int)) -> Int {
-    var offsets = offsetsConst
+func solve(_ offsets: inout [Int], _ newOffset: (Int) -> (Int)) -> Int {
     var steps = 0
     var cur = 0
     while cur >= 0 && cur < offsets.count {
@@ -35,15 +34,15 @@ var inputs = ["""
 """]
 
 for input in inputs {
-    let offsets = convert(input)
+    var offsets = convert(input)
     print("Part 1:")
-    var steps = solve(offsets, { (offset) -> (Int) in
+    var steps = solve(&offsets, { (offset) -> (Int) in
         return offset + 1
     })
     print("Steps: \(steps)")
     
     print("Part 2:")
-    steps = solve(offsets, { (offset) -> (Int) in
+    steps = solve(&offsets, { (offset) -> (Int) in
         return offset >= 3 ? offset - 1 : offset + 1
     })
     print("Steps: \(steps)")
