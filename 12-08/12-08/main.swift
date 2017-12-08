@@ -16,28 +16,14 @@ func read(fileName: String) -> String? {
 }
 
 struct Condition {
-    enum Operator {
-        case LT
-        case GT
-        case GE
-        case EE
-        case LE
-        case NE
-    }
-    
-    var op = Operator.EE
+    var op: (Int, Int) -> Bool = (==)
     var lhs = ""
     var rhs = 0
 }
 
 struct RegisterChange {
-    enum Operator {
-        case Increment
-        case Decrement
-    }
-    
     var register = ""
-    var op = Operator.Increment
+    var op: (Int, Int) -> Int = (+)
     var value = 0
     var condition = Condition()
 }
@@ -72,13 +58,13 @@ func parseIdentifier(_ s: String, fromIndex startIndex: String.Index) -> (String
     return (index, buf)
 }
 
-func parseRegisterOperator(_ s: String, fromIndex startIndex: String.Index) -> (String.Index, RegisterChange.Operator) {
+func parseRegisterOperator(_ s: String, fromIndex startIndex: String.Index) -> (String.Index, (Int, Int) -> Int) {
     let endIndex = s.index(startIndex, offsetBy: 4)
     
     if s[startIndex] == "i" {
-        return (endIndex, RegisterChange.Operator.Increment)
+        return (endIndex, +)
     } else {
-        return (endIndex, RegisterChange.Operator.Decrement)
+        return (endIndex, -)
     }
 }
 
@@ -91,26 +77,26 @@ func parseCondition(_ s: String, fromIndex startIndex: String.Index) -> (String.
     return (index, c)
 }
 
-func parseConditionOperator(_ s: String, fromIndex startIndex: String.Index) -> (String.Index, Condition.Operator) {
+func parseConditionOperator(_ s: String, fromIndex startIndex: String.Index) -> (String.Index, (Int, Int) -> Bool) {
     var index: String.Index
     var opStr: String
     (index, opStr) = parseIdentifier(s, fromIndex: startIndex)
     switch opStr {
     case "<":
-        return (index, Condition.Operator.LT)
+        return (index, <)
     case ">":
-        return (index, Condition.Operator.GT)
+        return (index, >)
     case ">=":
-        return (index, Condition.Operator.GE)
+        return (index, >=)
     case "==":
-        return (index, Condition.Operator.EE)
+        return (index, ==)
     case "<=":
-        return (index, Condition.Operator.LE)
+        return (index, <=)
     case "!=":
-        return (index, Condition.Operator.NE)
+        return (index, !=)
     default:
         print("Unexpected operator: \(opStr)")
-        return (index, Condition.Operator.EE)
+        return (index, ==)
     }
 }
 
@@ -136,20 +122,7 @@ func getOrCreateValue(key: String, dict: inout [String:Int]) -> Int {
 
 func isTrue(_ c: Condition, regs: inout [String:Int]) -> Bool {
     let lhs = getOrCreateValue(key: c.lhs, dict: &regs)
-    switch c.op {
-    case .LT:
-        return lhs < c.rhs
-    case .GT:
-        return lhs > c.rhs
-    case .GE:
-        return lhs >= c.rhs
-    case .EE:
-        return lhs == c.rhs
-    case .LE:
-        return lhs <= c.rhs
-    case .NE:
-        return lhs != c.rhs
-    }
+    return c.op(lhs, c.rhs)
 }
 
 func evaluate(changes: [RegisterChange], regs: inout [String:Int], maxCache: inout [Int]) {
@@ -160,13 +133,7 @@ func evaluate(changes: [RegisterChange], regs: inout [String:Int], maxCache: ino
         
         // Make sure the register is initialized
         let _ = getOrCreateValue(key: change.register, dict: &regs)
-        switch change.op {
-        case .Increment:
-            regs[change.register]! += change.value
-        case .Decrement:
-            regs[change.register]! -= change.value
-        }
-        
+        regs[change.register] = change.op(regs[change.register]!, change.value)
         maxCache.append(findLargestValue(regs))
     }
 }
