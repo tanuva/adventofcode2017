@@ -134,20 +134,13 @@ func evaluate(changes: [RegisterChange], regs: inout [String:Int], maxCache: ino
         // Make sure the register is initialized
         let _ = getOrCreateValue(key: change.register, dict: &regs)
         regs[change.register] = change.op(regs[change.register]!, change.value)
-        maxCache.append(findLargestValue(regs))
+        maxCache.append(regs.values.max(by: altb)!)
     }
 }
 
-func findLargestValue(_ regs: [String:Int]) -> Int {
-    var max = Int.min
-    
-    for val in regs.values {
-        if val > max {
-            max = val
-        }
-    }
-    
-    return max
+// Helper for Array.max, used in several places
+let altb = { (a: Int, b: Int) -> Bool in
+    return a < b
 }
 
 var inputs = ["example", "puzzle"]
@@ -161,8 +154,7 @@ for input in inputs {
     var registers: [String:Int] = [:]
     var maxima: [Int] = []
     evaluate(changes: changes, regs: &registers, maxCache: &maxima)
-    let globalMax = maxima.max(by: { (a, b) -> Bool in
-        return a < b
-    })!
-    print("Maximum: \(findLargestValue(registers)) Global max: \(globalMax)")
+    let lastMax = registers.values.max(by: altb)!
+    let globalMax = maxima.max(by: altb)!
+    print("Maximum: \(lastMax) Global max: \(globalMax)")
 }
