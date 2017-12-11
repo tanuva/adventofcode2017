@@ -23,8 +23,9 @@ struct Position {
     var y = 0
 }
 
-func follow(_ s: String) -> Position {
+func follow(_ s: String) -> [Int] {
     var pos = Position()
+	var pathLengths: [Int] = []
     
     for step in s.split(separator: ",") {
         switch step {
@@ -45,12 +46,14 @@ func follow(_ s: String) -> Position {
         default:
             print("Unexpected step: \(step)")
         }
+
+		pathLengths.append(findPathLength(to: pos))
     }
     
-    return pos
+    return pathLengths
 }
 
-func findShortestPathLength(to target: Position) -> Int {
+func findPathLength(to target: Position) -> (Int) {
     let dx = target.x
     let dy = target.y
     
@@ -72,10 +75,9 @@ for input in inputs {
     }
     
     for line in data.split(separator: "\n") {
-        let target = follow(String(line))
-        print("Target \(index): \(target)")
-        let pathLength = findShortestPathLength(to: target)
-        print("Path length: \(pathLength)\n")
+        let pathLengths = follow(String(line))
+		let longestPath = pathLengths.max()!
+		print("Final path: \(pathLengths.last!) Longest path: \(longestPath)\n")
         index += 1
     }
 }
