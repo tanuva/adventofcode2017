@@ -6,8 +6,7 @@ func read(fileName: String) -> String? {
         do {
             let text = try String(contentsOf: fileURL, encoding: .utf8)
             return text
-        }
-        catch _ {
+        } catch _ {
             print("File reading error: \(fileName)")
         }
     }
@@ -42,9 +41,7 @@ func addNode(_ s: String, graph: inout [Int:[Int]]) {
             return
         }
         
-        //if !graph[id]!.contains(pipedNodeId) {
             graph[id]!.append(pipedNodeId)
-        //}
     }
 }
 
