@@ -73,9 +73,29 @@ func countConnectedNodes(to node: Int, in graph: [Int:[Int]], seenNodes: inout [
     return connected
 }
 
-func countConnectedNodes(to node: Int, in graph: [Int:[Int]]) -> Int {
+func findConnectedNodes(to node: Int, in graph: [Int:[Int]]) -> [Int] {
     var seenNodes: [Int] = []
-    return countConnectedNodes(to: node, in: graph, seenNodes: &seenNodes)
+    _ = countConnectedNodes(to: node, in: graph, seenNodes: &seenNodes)
+    return seenNodes
+}
+
+func findGroupCount(in graph: [Int:[Int]]) -> Int {
+    var groups: [[Int]] = []
+    for node in graph.keys {
+        var knownNode = false
+        for group in groups {
+            if group.contains(node) {
+                knownNode = true
+                break
+            }
+        }
+        
+        if !knownNode {
+            groups.append(findConnectedNodes(to: node, in: graph))
+        }
+    }
+    
+    return groups.count
 }
 
 var inputs = ["example", "puzzle"]
@@ -83,8 +103,10 @@ var inputs = ["example", "puzzle"]
 for input in inputs {
     if let data = read(fileName: input) {
         let graph = parse(data)
-        print("Graph: \(graph)")
-        let nodeCount = countConnectedNodes(to: 0, in: graph)
-        print("Connected: \(nodeCount)")
+        let nodeCount = findConnectedNodes(to: 0, in: graph).count
+        print("Part 1: Connected to 0: \(nodeCount)")
+        
+        let groupCount = findGroupCount(in: graph)
+        print("Part 2: Group count: \(groupCount)")
     }
 }
