@@ -14,35 +14,47 @@ func read(fileName: String) -> String? {
     return nil
 }
 
-func addNode(_ s: String, graph: inout [Int:[Int]]) {
+func parseNode(_ s: String, graph: inout [Int:[Int]]) -> Int? {
     guard let idEnd = s.index(of: "<") else {
         print("Cannot find '<' in \(s)")
-        return
+        return nil
     }
     let idStr = s.prefix(upTo: idEnd)
     guard let id = Int(idStr) else {
         print("Cannot convert \(idStr) to Int")
-        return
+        return nil
     }
     
     if !graph.keys.contains(id) {
         graph[id] = []
     }
     
+    return id
+}
+
+func parseConnectedNodes(_ s: String, graph: inout [Int:[Int]], node: Int) {
     guard let arrowEndIdx = s.index(of: ">") else {
         print("Cannot find \">\" in \(s)")
         return
     }
-    let pipesStrStart = s.index(after: arrowEndIdx)
-    let pipesStr = s.suffix(from: pipesStrStart)
-    for pipeIdStr in pipesStr.split(separator: ",") {
-        guard let pipedNodeId = Int(pipeIdStr) else {
-            print("Cannot convert \(pipeIdStr) to Int")
-            return
+    let pipesStr = s.suffix(from: s.index(after: arrowEndIdx))
+    
+    for connectedNodeStr in pipesStr.split(separator: ",") {
+        guard let connectedNode = Int(connectedNodeStr) else {
+            print("Cannot convert \(connectedNodeStr) to Int")
+            continue
         }
         
-            graph[id]!.append(pipedNodeId)
+        graph[node]!.append(connectedNode)
     }
+}
+
+func parseLine(_ s: String, graph: inout [Int:[Int]]) {
+    // Input is stripped from whitespace, e.g. "2<->0,3,4"
+    guard let node = parseNode(s, graph: &graph) else {
+        return
+    }
+    parseConnectedNodes(s, graph: &graph, node: node)
 }
 
 func parse(_ s: String) -> [Int:[Int]] {
@@ -50,7 +62,7 @@ func parse(_ s: String) -> [Int:[Int]] {
     
     for line in s.split(separator: "\n") {
         let stripped = line.replacingOccurrences(of: " ", with: "")
-        addNode(stripped, graph: &graph)
+        parseLine(stripped, graph: &graph)
     }
     
     return graph
@@ -76,10 +88,12 @@ func findConnectedNodes(to node: Int, in graph: [Int:[Int]]) -> [Int] {
     return seenNodes
 }
 
-func findGroupCount(in graph: [Int:[Int]]) -> Int {
+func findAllGroups(in graph: [Int:[Int]]) -> [[Int]] {
     var groups: [[Int]] = []
+
     for node in graph.keys {
         var knownNode = false
+
         for group in groups {
             if group.contains(node) {
                 knownNode = true
@@ -92,7 +106,7 @@ func findGroupCount(in graph: [Int:[Int]]) -> Int {
         }
     }
     
-    return groups.count
+    return groups
 }
 
 var inputs = ["example", "puzzle"]
@@ -101,9 +115,7 @@ for input in inputs {
     if let data = read(fileName: input) {
         let graph = parse(data)
         let nodeCount = findConnectedNodes(to: 0, in: graph).count
-        print("Part 1: Connected to 0: \(nodeCount)")
-        
-        let groupCount = findGroupCount(in: graph)
-        print("Part 2: Group count: \(groupCount)")
+        let groupCount = findAllGroups(in: graph).count
+        print("Nodes connected to node 0: \(nodeCount) Total group count: \(groupCount)")
     }
 }
