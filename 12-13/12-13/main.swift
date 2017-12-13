@@ -14,11 +14,12 @@ func read(fileName: String) -> String? {
     return nil
 }
 
-struct Layer {
+struct Layer : CustomDebugStringConvertible {
     let depth: Int
     let range: Int
-    var scanner = 0
-    var scannerStep = 1 // 1 or -1
+    var debugDescription: String {
+        return "L(d: \(depth) r: \(range))"
+    }
 }
 
 func parse(_ s: String) -> [Int:Layer] {
@@ -50,36 +51,37 @@ func parseLine(_ s: Substring) -> Layer? {
         return nil
     }
 
-    return Layer(depth: depth, range: range, scanner: 0, scannerStep: 1)
+    return Layer(depth: depth, range: range)
 }
 
-func traverse(firewall fw: inout [Int:Layer]) -> Int {
-    var packetPos = 0
+func traverse(firewall fw: [Int:Layer], delay: Int) -> Int {
     var severity = 0
+    var caught = false // Helps noticing if we get caught in layer 0 *only*
     
-    while packetPos <= fw.keys.max()! {
-        if let layer = fw[packetPos] {
-            if layer.scanner == 0 {
-                severity += layer.depth * layer.range
-            }
-        }
+    for (depth, layer) in fw {
+        let picosec = depth + delay
         
-        advanceScanners(in: &fw)
-        packetPos += 1
+        if calculateScannerPos(for: layer, at: picosec) == 0 {
+            caught = true
+            severity += layer.depth * layer.range
+        }
     }
     
-    return severity
+    return severity == 0 && caught ? 1 : severity
 }
 
-func advanceScanners(in fw: inout [Int:Layer]) {
-    for id in fw.keys {
-        var layer = fw[id]!
-        layer.scanner += layer.scannerStep
-        
-        if layer.scanner == layer.range - 1 || layer.scanner == 0 {
-            layer.scannerStep *= -1
-        }
-        fw[id] = layer
+func calculateScannerPos(for layer: Layer, at picosec: Int) -> Int {
+    // range-1 because of how the magic here works
+    let adaptedRange = layer.range - 1
+    let mod = picosec % adaptedRange
+    let div = picosec / adaptedRange
+    
+    if div % 2 == 0 {
+        // forward
+        return mod
+    } else {
+        // backward
+        return adaptedRange - mod
     }
 }
 
@@ -90,7 +92,17 @@ for input in inputs {
         continue
     }
     
-    var firewall = parse(data)
-    let caughtValue = traverse(firewall: &firewall)
-    print("Caught: \(caughtValue)")
+    let firewall = parse(data)
+    var delay = 0
+    
+    print("Part 1 Severity: \(traverse(firewall: firewall, delay: 0))")
+    
+    while true {
+        if traverse(firewall: firewall, delay: delay) == 0 {
+            print("Part 2 Delay: \(delay)")
+            break
+        }
+        
+        delay += 1
+    }
 }
